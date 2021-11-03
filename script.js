@@ -1,4 +1,4 @@
-directionLeft = true
+
 // crush
 // crush
 const FREE_CELL = 0;
@@ -29,6 +29,22 @@ const characters = {
     }
 }
 
+const isSafePath =(pathSide)=> {
+    let [x,y] = pathSide;
+
+    // If the character is top or left side
+    x < 0 &&  (x = matrix.length - 1);
+    y < 0 && (y = matrix.length - 1);
+
+    // if the character is right or bottom side
+    x > matrix.length - 1 && (x = 0);
+    y > matrix.length - 1 && (y = 0);
+
+    // return safe path for moving rabbit
+    return [x,y];
+}
+
+const possibleCell = {}
 const matrix = [
     [0,0,0,1,0,0,0],
     [0,0,3,0,2,0,0],
@@ -38,10 +54,13 @@ const matrix = [
     [0,2,0,0,0,0,2],
     [0, 0,0,0,0,0,0],
 ]
+
+
 window.addEventListener('keydown',(e) => {
     code = e.keyCode;
     keyControls(code);
 });
+
 
 
 function keyControls(code){
@@ -49,27 +68,45 @@ function keyControls(code){
 }
 
 function moveCharachter(character,code){
-    const getCharacterCellCordinates = getCharacterCordinates(character);
-    const getAllDirectionsCordinates = getAllMoves(character); //Object
-    const getPossibleCellsForMove = getAllowedMoves(getCharacterCellCordinates, getAllDirectionsCordinates,character,code);
-    console.log(getPossibleCellsForMove);
-
+    const getCharacterIndex = getCharacterCordinates(character);
+    const getAllDirectionIndexes = getAllMoves(character);  //Object
+    moveRabbit(getCharacterIndex, getAllDirectionIndexes,character,code);
 }
 
- 
-function getAllowedMoves(getCharacterCellCordinates,getAllDirectionsCordinates,character,code){
-    const characterAllowedCells = characters[character].allowedMoves;
-    // where can character go
-    const possibleCordinates = [];
 
-    Object.keys(getAllDirectionsCordinates).forEach(key => {
-    let possibleCell = [x1,y1] = getAllDirectionsCordinates[key];
-    if(characterAllowedCells.includes(matrix[x1][y1])){
-        possibleCordinates.push(possibleCell);
-        }
+function moveRabbit(getCharacterIndex,getAllDirectionIndexes,character,code){
+    const [currentX, currentY] = getCharacterIndex;
+    let  isSafeToGoPath;
+    const moves = {};
+    let array = [];
+    let portal;
+    let constAllowedMoves = characters[character].allowedMoves;
+
+    Object.keys(getAllDirectionIndexes).forEach(key => {
+        isSafePath(getAllDirectionIndexes[key]);
+        portal = isSafePath(getAllDirectionIndexes[key]);
+        const [newX,newY] = portal;
+
+       if(constAllowedMoves.includes(matrix[newX][newY])){
+           moves[key] = [newX,newY];
+       }
     });
-    return possibleCordinates;
+    
+       Object.keys(moves).forEach(key => {
+        const [moveX,moveY] = moves[key];
+       if(key == code){
+           matrix[currentX][currentY] = FREE_CELL;
+           matrix[moveX][moveY] = character;
+       }
+    });
+    console.log(matrix);
 }
+function getPossibleMoveDirection(){
+    
+}
+
+
+
 
 function getCharacterCordinates(character){
     let getCordinates;
@@ -93,54 +130,3 @@ function getAllMoves(character){
     }
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-// function  getNextCellCharacter(getCharacterNextCell,character){
-//     const [x,y] = getCharacterNextCell;
-//     return matrix[x][y];
-// }
-// // Check if the next cell is possible to move
-// function isAllowedToMove(pathSide,character){
-//     let [x,y] = pathSide;
-    
-//     // characters.character.
-//     // If the character is top or left side
-//     x < 0 &&  (x = matrix.length - 1);
-//     y < 0 && (y = matrix.length - 1);
-
-//     // if the character is right or bottom side
-//     x > matrix.length - 1 && (x = 0);
-//     y > matrix.length - 1 && (y = 0);
-    
-//     // return safe path for moving rabbit
-//     return [x,y];
-// }
-
-
-
-
-
-
-
-
-// function getNeighbourCellsCharacter(getCharacterCellCordinates,getAllDirectionsCordinates){
-//     const [x,y] = getCharacterCellCordinates;
-//     return [
-//         matrix[x][y-1],
-//         matrix[x - 1][y],
-//         matrix[x][y + 1],
-//         matrix[x+1][y],
-//     ]
-// }
