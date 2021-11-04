@@ -126,9 +126,10 @@ function keyControls(code){
 }
 function moveCharacter(character,code){
     const getCharacterIndex = getCharacterCordinates(character);
-    moveRabbit(getCharacterIndex, getAllMoves(character,0)[0],character,code); 
+    const getAllUnlegalMoves  = getAllMoves(character);
 
-  
+
+    moveRabbit(getCharacterIndex, getAllUnlegalMoves[0],character,code); 
 }
 
 
@@ -168,7 +169,6 @@ function getPossibleMoveDirection(getAllDirectionIndexes,character){
 
 function getCharacterCordinates(character){
     let getCordinates = [];
-    
     matrix2.forEach((array, rowIndex) => {
         array.forEach((element, columnIndex) => {
            if(element === character){
@@ -179,15 +179,15 @@ function getCharacterCordinates(character){
     return getCordinates;
 }
 
-function getAllMoves(character,index){
-    const [x,y] = getCharacterCordinates(character)[index];
-    const allCordinates = [];
-    allCordinates.push({
-        37: [newX,newY] = [x, y - 1],
-        38: [newX,newY] = [x - 1, y],
-        39: [newX,newY] = [x, y + 1],
-        40: [newX,newY] = [x + 1, y], 
-    })
-    return allCordinates;
+function getAllMoves(character){
+    const getAllMovesArray = getCharacterCordinates(character).map((cordinates)=>{
+        const [x,y] = cordinates;
+        return ({
+            37: [newX,newY] = [x, y - 1],
+            38: [newX,newY] = [x - 1, y],
+            39: [newX,newY] = [x, y + 1],
+            40: [newX,newY] = [x + 1, y], 
+        })
+    });
+    return getAllMovesArray;
 }
-
