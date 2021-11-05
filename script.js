@@ -1,58 +1,66 @@
-const FREE_CELL = 0;
-const RABBIT_CELL = 1;
-const WOLF_CELL = 2;
-const BAN_CELL = 3;
-const HOUSE_CELL = 4;
-const ROCK_CELL = 5;
 const board = document.querySelector('.board');
+const BAN_CELL = 3;
+const FREE_CELL = 0;
+const WOLF_CELL = 2;
+const ROCK_CELL = 5;
+const HOUSE_CELL = 4;
+const RABBIT_CELL = 1;
+let matrix;
+
 const gameSettings = {
     WOLFCOUNT: 3,
-    BANCOUNT:1
+    BANCOUNT:1,
 }
-
-let matrix2;
 
 const characters = {
     [RABBIT_CELL]: {
         name: "rabbit",
-        imgSrc:"",
+        src:'images/rabbit.png',
         allowedMoves: [FREE_CELL, WOLF_CELL, HOUSE_CELL],
     },
     [WOLF_CELL]:{
         name: "wolf",
-        imgSrc:"",
+        src:'images/gamewolf.png',
         allowedMoves: [FREE_CELL, RABBIT_CELL]
     },
-    [ROCK_CELL]:{
+    [BAN_CELL]:{
+        src:'images/ban.png',
         name: "rock",
-        imgSrc:"",
+        
     },
     [HOUSE_CELL]:{
         name: "house",
-        imgSrc:"",
+        src:'images/home.png',
     }
 }
 
-function startGame(){
+const startGame = () => {
     const boxCountValue = parseInt(document.getElementById("select").value);
-    matrix2 = createMatrix(boxCountValue,FREE_CELL);
+    matrix = createMatrix(boxCountValue, FREE_CELL);
+    setCharacterCounts();
     createUI(boxCountValue);
     positionPlayers();
     gameReady();
 }
 
-function createMatrix(lenght, defaultValue){
+const setCharacterCounts = () => {
+    gameSettings.WOLFCOUNT = (matrix.length * 40) / 100;
+    gameSettings.BANCOUNT = (matrix.length * 40) / 100;
+
+}
+
+const createMatrix = (lenght, defaultValue) => {
     return new Array(lenght)
       .fill(defaultValue)
       .map(() => new Array(lenght).fill(defaultValue));
+
   };
 
-
-function createUI(sideSize){
+const createUI = (sideSize) => {
     let cell;
     board.innerHTML = "";
     board.style.width = `${sideSize * 64}`
-    matrix2.forEach((x,indexX)=>{
+    matrix.forEach((x,indexX)=>{
         x.forEach((y,indexY)=>{
             cell = document.createElement("div");
             board.appendChild(cell);
@@ -61,165 +69,157 @@ function createUI(sideSize){
     })
 };
 
-
-const isSafePath =(pathSide,character)=> {
+const isSafePath = (pathSide, character) => {
     let [x,y] = pathSide;
     // If the character is top or left side
-    ((x < 0) && (character == RABBIT_CELL)) && (x = matrix2.length - 1);
-    ((y < 0) && (character == RABBIT_CELL)) && (y = matrix2.length - 1);
+    ((x < 0) && (character == RABBIT_CELL)) && (x = matrix.length - 1);
+    ((y < 0) && (character == RABBIT_CELL)) && (y = matrix.length - 1);
 
     (x < 0 && character == WOLF_CELL) && (x = 0);
     (y < 0 && character == WOLF_CELL) && (y = 0);
 
     // if the character is right or bottom side
-    ((x > matrix2.length - 1) && (character === RABBIT_CELL)) && (x = 0);
-    ((y > matrix2.length - 1) && (character === RABBIT_CELL)) && (y = 0);
+    ((x > matrix.length - 1) && (character === RABBIT_CELL)) && (x = 0);
+    ((y > matrix.length - 1) && (character === RABBIT_CELL)) && (y = 0);
    
-    (x > matrix2.length - 1 && character === WOLF_CELL) && (matrix2.length - 1);
-    (y > matrix2.length - 1 && character === WOLF_CELL) && (matrix2.length - 1);
+    (x > matrix.length - 1 && character === WOLF_CELL) && (x = matrix.length - 1);
+    (y > matrix.length - 1 && character === WOLF_CELL) && (y = matrix.length - 1);
     
-
-    // return safe path for moving rabbit
-    return [x,y];
+    // return safe path for moving rabbit or wolf
+    return [x, y];
 }
 
-function gameReady(){
+const getRandomCoords = (count) => {
+    return Math.floor(Math.random() * count);  
+}
+
+const getRandomFreeCoords = (board) => {
+    const [x, y] = [getRandomCoords(matrix.length), getRandomCoords(matrix.length)]
+  if(board[x][y] === 0) {
+    return [x, y];
+  }
+  return getRandomFreeCoords(matrix);
+}
+
+const positionPlayers = () => {
+
+    positionCharacter(HOUSE_CELL, 1);
+    positionCharacter(RABBIT_CELL, 1);
+    positionCharacter(WOLF_CELL, gameSettings.WOLFCOUNT);
+    positionCharacter(BAN_CELL, gameSettings.BANCOUNT);
+    
+}
+
+const positionCharacter = (character, count) => {
+    for(let i = 0; i < count; i++){
+        positionSingleCharacter(character);
+    }
+}
+
+const positionSingleCharacter = (character) => {
+    const [x, y] = getRandomFreeCoords(matrix);
+    matrix[x][y] = character;
+    let image = document.createElement('img');
+    image.src = characters[character].src;
+    document.getElementById(`${x}${y}`).appendChild(image);
+
+}
+const gameReady = () => {
     window.addEventListener('keydown',(e) => {
         code = e.keyCode;
         keyControls(code);
     });    
 }
 
-function getRandomCoords(count){
-    return Math.floor(Math.random() * count);  
+const keyControls = (code) => {
+    moveCharacter(RABBIT_CELL, code);
+
 }
 
-
-function getRandomFreeCoords(board){
-    const [x, y] = [getRandomCoords(matrix2.length), getRandomCoords(matrix2.length)]
-  if(board[x][y] === 0) {
-    return [x, y];
-  }
-  return getRandomFreeCoords(matrix2);
+const moveCharacter = (character, code) => {
+    moveRabbit(character, code); 
+    moveWolf(WOLF_CELL);
 }
 
-function positionPlayers(){
-    positionCharacter(RABBIT_CELL, 1);
-    positionCharacter(WOLF_CELL,gameSettings.WOLFCOUNT);
-    positionCharacter(BAN_CELL, gameSettings.BANCOUNT);
-    positionCharacter(HOUSE_CELL, 1);
-}
-
-function positionCharacter(CHARACHTER,count){
-    for(let i = 0; i < count; i++){
-        positionSingleCharacter(CHARACHTER);
-    }
-}
-
-function positionSingleCharacter(CHARACTER){
-    const [x, y] = getRandomFreeCoords(matrix2);
-    matrix2[x][y] = CHARACTER;
-    document.getElementById(`${x}${y}`).innerHTML = CHARACTER;
-    // console.log(matrix2);
-    
-}
-function keyControls(code){
-    moveCharacter(RABBIT_CELL,code);
-}
-function moveCharacter(character,code){
-    moveRabbit(character,code); 
-    // for(let i = 0; i < gameSettings.WOLFCOUNT;i++){
-    //     attackRabbit(getCharacterIndex[i],getAllUnlegalMoves[i],character,code);
-    // }
-    moveWolf(WOLF_CELL,code);
-}
-
-function moveWolf(character,code){
-    let getAllDirectionIndexes  = getAllMoves(character);
+const moveWolf = (character) => {
+    let getAllDirectionIndexes  = getAllSides(character);
     const getCharacterIndex = getCharacterCordinates(character);
-    for(let i = 0; i < gameSettings.WOLFCOUNT;i++){
-        attackRabbit(getCharacterIndex[i],getAllDirectionIndexes[i],character,code);
+
+    for(let i = 0; i < gameSettings.WOLFCOUNT; i++){
+        attackRabbit(getCharacterIndex[i], getAllDirectionIndexes[i], character);
     }
 }
 
-
-
-function attackRabbit(characterIndex,getAllDirectionIndexes,character,code){
-
-   console.log(characterIndex);
-   let possiblewaystoGoWolf = getPossibleMoveDirection(getAllDirectionIndexes,character);
-
-   calculateNearPath(possiblewaystoGoWolf,characterIndex,character);
+const attackRabbit = (characterIndex, getAllDirectionIndexes, character) => {
+   let wolfNextPossibleCells = getPossibleMoveDirection(getAllDirectionIndexes, character);
+   calculateNearPath(wolfNextPossibleCells, characterIndex, character);
 
 }
 
-function calculateNearPath(possiblewaystoGoWolf,characterIndex,character){
+const calculateNearPath = (wolfNextPossibleCells, characterIndex, character) => {
     const getRabbitIndex = getCharacterCordinates(RABBIT_CELL);
-    let result;
-    let obj = {}
-
-    console.log(possiblewaystoGoWolf); //{38: Array(2), 40: Array(2)}
-
-    const [x,y] = characterIndex;
+    const nearPathCells = {}
+    let resultOfTeorem;
+  
     const [rabbitX, rabbitY] = getRabbitIndex[0];
-    Object.keys(possiblewaystoGoWolf).forEach(key => {
-        const [checkX,checkY] = possiblewaystoGoWolf[key];
+
+    Object.keys(wolfNextPossibleCells).forEach(key => {
+        const [checkX, checkY] = wolfNextPossibleCells[key];
         // phytagoras teorem
         const side1 = Math.abs(rabbitX - checkX);
         const side2 = Math.abs(rabbitY - checkY);
-        result = Math.floor(Math.sqrt(Math.pow(side1, 2) + Math.pow(side2, 2)));
-        console.log(result);
-        obj[result] = [checkX,checkY];
+        resultOfTeorem = Math.floor(Math.sqrt(Math.pow(side1, 2) + Math.pow(side2, 2)));
+        nearPathCells[resultOfTeorem] = [checkX,checkY];
     });
-    console.log(obj);
-
-    console.log(obj[Object.keys(obj)[0]]);
-    const [newWolfX,newWolfY] = obj[Object.keys(obj)[0]];
-    matrix2[newWolfX][newWolfY] = FREE_CELL;
-    document.getElementById(`${x}${y}`).innerHTML = '';
-    matrix2[newWolfX][newWolfY] = character;
-    document.getElementById(`${newWolfX}${newWolfY}`).innerHTML = character; 
-    
+       
+    moveCurrentCharacter(characterIndex, nearPathCells[Object.keys(nearPathCells)[0]], character);
 }
 
 
-function moveRabbit(character,code){
-    let getAllDirectionIndexes  = getAllMoves(character);
+const moveRabbit = (character, code) => {
+    let getAllDirectionIndexes  = getAllSides(character);
     const getCharacterIndex = getCharacterCordinates(character);
-    const [currentX, currentY] = getCharacterIndex[0];
-    let possibleMoves = getPossibleMoveDirection(getAllDirectionIndexes[0],character);
+    let possibleMoves = getPossibleMoveDirection(getAllDirectionIndexes[0], character);
 
     Object.keys(possibleMoves).forEach(key => {
-    const [moveX,moveY] = possibleMoves[key];
        if(key == code){
-           matrix2[currentX][currentY] = FREE_CELL;
-           document.getElementById(`${currentX}${currentY}`).innerHTML = '';
-           matrix2[moveX][moveY] = character;
-           document.getElementById(`${moveX}${moveY}`).innerHTML = character; 
+           moveCurrentCharacter(getCharacterIndex[0], possibleMoves[key], character);
        }
     });
 }
+const moveCurrentCharacter = (currentIndex, move, character) => {
+    const [currentX, currentY] = currentIndex;
+    const [moveX, moveY] =  move;
+    matrix[currentX][currentY] = FREE_CELL;
+    matrix[moveX][moveY] = character;
+    let rabbit = document.getElementById(`${currentX}${currentY}`).firstChild;
+    console.log(rabbit);
+    document.getElementById(`${moveX}${moveY}`).appendChild(rabbit);
+    document.getElementById(`${currentX}${currentY}`).removeChild;
+
+    // document.getElementById(`${moveX}${moveY}`).innerHTML = character;
+    // document.getElementById(`${currentX}${currentY}`).innerHTML = "";
+}
 
 
-function getPossibleMoveDirection(getAllDirectionIndexes,character){
-    
+const getPossibleMoveDirection = (getAllDirectionIndexes, character) => {  
     const characterPossibleMoves = {};
     const allowedMoves = characters[character].allowedMoves;
 
      Object.keys(getAllDirectionIndexes).forEach(key => {
         isSafePath(getAllDirectionIndexes[key], character);
-        let checkIfPortal = isSafePath(getAllDirectionIndexes[key],character);
-        const [newX,newY] = checkIfPortal;
-       if(allowedMoves.includes(matrix2[newX][newY])){
-           characterPossibleMoves[key] = [newX,newY];
+        let checkIfPortal = isSafePath(getAllDirectionIndexes[key], character);
+        const [newX, newY] = checkIfPortal;
+       if(allowedMoves.includes(matrix[newX][newY])){
+           characterPossibleMoves[key] = [newX, newY];
        }
     });
     return characterPossibleMoves;
 }
 
-function getCharacterCordinates(character){
+const getCharacterCordinates = (character) => {
     let getCordinates = [];
-    matrix2.forEach((array, rowIndex) => {
+    matrix.forEach((array, rowIndex) => {
         array.forEach((element, columnIndex) => {
            if(element === character){
                return getCordinates.push([x,y] = [rowIndex, columnIndex]);
@@ -229,7 +229,7 @@ function getCharacterCordinates(character){
     return getCordinates;
 }
 
-function getAllMoves(character){
+const getAllSides = (character) => {
     const getAllMovesArray = getCharacterCordinates(character).map((cordinates)=>{
         const [x,y] = cordinates;
         return ({
