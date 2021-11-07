@@ -1,4 +1,6 @@
-const board = document.querySelector('.board');
+document.addEventListener('keydown',function a(e){code = e.keyCode; keyControls(code)});
+const gameStatus = document.querySelector('.gameStatus');
+const statusText = document.getElementById('statusText');
 const BAN_CELL = 3;
 const FREE_CELL = 0;
 const WOLF_CELL = 2;
@@ -6,10 +8,12 @@ const ROCK_CELL = 5;
 const HOUSE_CELL = 4;
 const RABBIT_CELL = 1;
 let matrix;
+let board;
 
 const gameSettings = {
-    WOLFCOUNT: 3,
+    WOLFCOUNT: 3, 
     BANCOUNT:1,
+
 }
 
 const characters = {
@@ -25,8 +29,7 @@ const characters = {
     },
     [BAN_CELL]:{
         src:'images/ban.png',
-        name: "rock",
-        
+        name: "rock",    
     },
     [HOUSE_CELL]:{
         name: "house",
@@ -34,22 +37,23 @@ const characters = {
     }
 }
 
-const startGame = () => {
+function startGame(){
+    gameStatus.style.display = "none"
     const boxCountValue = parseInt(document.getElementById("select").value);
     matrix = createMatrix(boxCountValue, FREE_CELL);
     setCharacterCounts();
     createUI(boxCountValue);
     positionPlayers();
-    gameReady();
 }
 
-const setCharacterCounts = () => {
+
+function setCharacterCounts(){
     gameSettings.WOLFCOUNT = (matrix.length * 40) / 100;
     gameSettings.BANCOUNT = (matrix.length * 40) / 100;
 
 }
 
-const createMatrix = (lenght, defaultValue) => {
+function createMatrix(lenght, defaultValue){
     return new Array(lenght)
       .fill(defaultValue)
       .map(() => new Array(lenght).fill(defaultValue));
@@ -57,12 +61,12 @@ const createMatrix = (lenght, defaultValue) => {
   };
 
 const createUI = (sideSize) => {
-    let cell;
+    board = document.querySelector('.board');
     board.innerHTML = "";
     board.style.width = `${sideSize * 64}`
     matrix.forEach((x,indexX)=>{
         x.forEach((y,indexY)=>{
-            cell = document.createElement("div");
+            let cell = document.createElement("div");
             board.appendChild(cell);
             cell.id = `${indexX}${indexY}`;
         });
@@ -93,7 +97,7 @@ const getRandomCoords = (count) => {
     return Math.floor(Math.random() * count);  
 }
 
-const getRandomFreeCoords = (board) => {
+function getRandomFreeCoords(board){
     const [x, y] = [getRandomCoords(matrix.length), getRandomCoords(matrix.length)]
   if(board[x][y] === 0) {
     return [x, y];
@@ -101,7 +105,7 @@ const getRandomFreeCoords = (board) => {
   return getRandomFreeCoords(matrix);
 }
 
-const positionPlayers = () => {
+function positionPlayers(){
 
     positionCharacter(HOUSE_CELL, 1);
     positionCharacter(RABBIT_CELL, 1);
@@ -110,13 +114,13 @@ const positionPlayers = () => {
     
 }
 
-const positionCharacter = (character, count) => {
+function positionCharacter(character, count){
     for(let i = 0; i < count; i++){
         positionSingleCharacter(character);
     }
 }
 
-const positionSingleCharacter = (character) => {
+function positionSingleCharacter(character){
     const [x, y] = getRandomFreeCoords(matrix);
     matrix[x][y] = character;
     let image = document.createElement('img');
@@ -124,13 +128,6 @@ const positionSingleCharacter = (character) => {
     document.getElementById(`${x}${y}`).appendChild(image);
 
 }
-const gameReady = () => {
-    window.addEventListener('keydown',(e) => {
-        code = e.keyCode;
-        keyControls(code);
-    });    
-}
-
 const keyControls = (code) => {
     moveCharacter(RABBIT_CELL, code);
 
@@ -158,20 +155,21 @@ const attackRabbit = (characterIndex, getAllDirectionIndexes, character) => {
 
 const calculateNearPath = (wolfNextPossibleCells, characterIndex, character) => {
     const getRabbitIndex = getCharacterCordinates(RABBIT_CELL);
+
     const nearPathCells = {}
     let resultOfTeorem;
   
     const [rabbitX, rabbitY] = getRabbitIndex[0];
-
-    Object.keys(wolfNextPossibleCells).forEach(key => {
+   
+    for (const key in wolfNextPossibleCells) {
         const [checkX, checkY] = wolfNextPossibleCells[key];
         // phytagoras teorem
         const side1 = Math.abs(rabbitX - checkX);
         const side2 = Math.abs(rabbitY - checkY);
         resultOfTeorem = Math.floor(Math.sqrt(Math.pow(side1, 2) + Math.pow(side2, 2)));
         nearPathCells[resultOfTeorem] = [checkX,checkY];
-    });
-       
+    } 
+   
     moveCurrentCharacter(characterIndex, nearPathCells[Object.keys(nearPathCells)[0]], character);
 }
 
@@ -180,40 +178,57 @@ const moveRabbit = (character, code) => {
     let getAllDirectionIndexes  = getAllSides(character);
     const getCharacterIndex = getCharacterCordinates(character);
     let possibleMoves = getPossibleMoveDirection(getAllDirectionIndexes[0], character);
+    for(const key in possibleMoves){
+        if(key == code){
+            checkStatus( possibleMoves[key]);
+            moveCurrentCharacter(getCharacterIndex[0], possibleMoves[key], character);
+        }
+    }
+}
 
-    Object.keys(possibleMoves).forEach(key => {
-       if(key == code){
-           moveCurrentCharacter(getCharacterIndex[0], possibleMoves[key], character);
-       }
-    });
+function checkStatus(checkMove){
+const [x,y] = checkMove;
+if(matrix[x][y]=== WOLF_CELL || matrix[x][y] == RABBIT_CELL){
+    const gameStatus = "It was very tasty,Game Over ...";
+    statusUi(gameStatus);
+    }
+if(matrix[x][y] == HOUSE_CELL){
+    const gameStatus = "Rabbit at home,won";
+    statusUi(gameStatus);
+    }
+}
+
+function statusUi(status){
+    matrix = [];
+    board.innerHTML = "";
+    statusText.innerHTML = status;
+    gameStatus.style.display = "block";
 }
 const moveCurrentCharacter = (currentIndex, move, character) => {
+ 
     const [currentX, currentY] = currentIndex;
+    
     const [moveX, moveY] =  move;
+
     matrix[currentX][currentY] = FREE_CELL;
+    checkStatus(move);
     matrix[moveX][moveY] = character;
     let rabbit = document.getElementById(`${currentX}${currentY}`).firstChild;
-    console.log(rabbit);
     document.getElementById(`${moveX}${moveY}`).appendChild(rabbit);
-    document.getElementById(`${currentX}${currentY}`).removeChild;
-
-    // document.getElementById(`${moveX}${moveY}`).innerHTML = character;
-    // document.getElementById(`${currentX}${currentY}`).innerHTML = "";
-}
-
+    document.getElementById(`${currentX}${currentY}`).removeChild; 
+    }
 
 const getPossibleMoveDirection = (getAllDirectionIndexes, character) => {  
     const characterPossibleMoves = {};
     const allowedMoves = characters[character].allowedMoves;
-
-     Object.keys(getAllDirectionIndexes).forEach(key => {
-        isSafePath(getAllDirectionIndexes[key], character);
+    
+    for (const key in getAllDirectionIndexes) {
         let checkIfPortal = isSafePath(getAllDirectionIndexes[key], character);
         const [newX, newY] = checkIfPortal;
-       if(allowedMoves.includes(matrix[newX][newY])){
-           characterPossibleMoves[key] = [newX, newY];
-       }
-    });
+        if(allowedMoves.includes(matrix[newX][newY])){
+            characterPossibleMoves[key] = [newX, newY];
+        }
+    } 
     return characterPossibleMoves;
 }
 
