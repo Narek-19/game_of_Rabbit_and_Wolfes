@@ -7,8 +7,28 @@ body{
     margin:0;
     width: 100%;
     height:100%;
+    position: absolute;
+    top:0;
+    left:0;
     background-color: #0aa1a3;
 }
+body button,select{
+    border:2px solid #0aa1a3;
+    font-family: 'Dancing Script';
+    font-size: 30px;
+    width:150px;
+    padding:4px;
+    margin:3px;
+    border-radius: 20px;
+    outline: none;
+    background-color:#FEF5ED;
+    cursor: pointer;
+}
+body button:active{
+    cursor: pointer;
+    color:#0F52BA;
+}
+/* GAMESTATUS */
 .gameStatus{
     display: none;
     position: absolute;
@@ -37,22 +57,6 @@ body{
 }
 .controls{
     text-align: center;
-}
-body button,select{
-    border:2px solid #0aa1a3;
-    font-family: 'Dancing Script';
-    font-size: 30px;
-    width:150px;
-    padding:4px;
-    margin:3px;
-    border-radius: 20px;
-    outline: none;
-    background-color:#FEF5ED;
-    cursor: pointer;
-}
-body button:active{
-    cursor: pointer;
-    color:#0F52BA;
 }
 .board{
     padding:20px;
