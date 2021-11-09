@@ -40,7 +40,7 @@ const characters = {
 
 function startGame() {
     gameStatus.style.display = "none"
-    matrix = createMatrix();
+    createMatrix();
     setCharacterCounts();
     createUI();
     positionPlayers();
@@ -53,7 +53,7 @@ function setCharacterCounts() {
 
 function createMatrix() {
     matrixLenght = parseInt(document.getElementById("select").value);
-    return new Array(matrixLenght)
+    matrix =  new Array(matrixLenght)
       .fill(FREE_CELL)
       .map(() => new Array(matrixLenght).fill(FREE_CELL));
   };
@@ -152,6 +152,14 @@ const calculateNearPath = (wolfNextPossibleCells, characterIndex, character) => 
     moveCurrentCharacter(characterIndex, neaCellToRabbit, character);
 }
 
+function getRabbitPossibleMoves(cordinate,direction){
+    let [x,y] = cordinate;
+    (x < direction.y) && (x = direction.x);
+    (y < direction.y) && (y = direction.x);
+    (x > direction.x) && (x = direction.y);
+    (y > direction.x) && (y = direction.y);
+    return [x, y];
+}
 const moveRabbit = (character, code) => {
     let allPossibleDirections  = getAllPossibleDirections(character);
     const characterCordinates = getCharacterCordinates(character);
@@ -242,11 +250,4 @@ const getAllPossibleDirections = (character) => {
     return getAllMovesArray;
 }
 
-function getRabbitPossibleMoves(cordinate,direction){
-    let [x,y] = cordinate;
-    (x < direction.y) && (x = direction.x);
-    (y < direction.y) && (y = direction.x);
-    (x > direction.x) && (x = direction.y);
-    (y > direction.x) && (y = direction.y);
-    return [x, y];
-}
+console.log("Hello");
