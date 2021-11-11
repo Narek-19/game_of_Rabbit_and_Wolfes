@@ -39,10 +39,6 @@ const characters = {
 }
 
 function startGame() {
-<<<<<<< HEAD
-    gameStatus.style.display = "none"
-=======
->>>>>>> f474f29f2c24e52f01e5ccbc3af6ed7044635138
     createMatrix();
     setCharacterCounts();
     createUI();
@@ -56,11 +52,7 @@ function setCharacterCounts() {
 
 function createMatrix() {
     matrixLenght = parseInt(document.getElementById("select").value);
-<<<<<<< HEAD
-    matrix =  new Array(matrixLenght)
-=======
     matrix = new Array(matrixLenght)
->>>>>>> f474f29f2c24e52f01e5ccbc3af6ed7044635138
       .fill(FREE_CELL)
       .map(() => new Array(matrixLenght).fill(FREE_CELL));
   };
@@ -78,16 +70,6 @@ const createUI = () => {
         });
     })
 };
-
-function getWolfPossibleMoves(cordinate,direction){
-    let [x,y] = cordinate;
-
-    (x < direction.y) && (x = direction.y);
-    (y < direction.y) && (y = direction.y);
-    (x > direction.x) && (x = direction.x);
-    (y > direction.x) && (y = direction.x);
-    return [x, y];
-}
 
 const getRandomCoord = (count) => {
     return Math.floor(Math.random() * count);  
@@ -115,7 +97,7 @@ function positionCharacter(character, count){
     }
 }
 
-const positionSingleCharacter= (character) => {
+const positionSingleCharacter = (character) => {
     const [x, y] = getRandomFreeCoords(matrix);
     matrix[x][y] = character;
     let image = document.createElement('img');
@@ -123,63 +105,62 @@ const positionSingleCharacter= (character) => {
     document.getElementById(`${x}${y}`).appendChild(image);
 
 }
-const keyControls = (code) => moveCharacter(RABBIT_CELL, code)
+const keyControls = (code) => moveCharacter(code)
 
-const moveCharacter = (character, code) => {
-    moveRabbit(character, code); 
+const moveCharacter = (code) => {
+    moveRabbit(code); 
     moveWolf();
 }
 
-const moveWolf = () => {
-    let allPossibleDirections  = getAllPossibleDirections(WOLF_CELL);
-    const characterCordinates = getCharacterCordinates(WOLF_CELL);
-    for(let i = 0; i < gameSettings.WOLFCOUNT; i++){
-        attackRabbit(characterCordinates[i], allPossibleDirections[i], WOLF_CELL);
-    }
-}
+const moveRabbit = (code) => {
+    let allPossibleDirections  = getAllPossibleDirections(RABBIT_CELL);
+    const characterCordinate = getCharacterCordinate(RABBIT_CELL);
 
-const attackRabbit = (characterIndex, allPossibleDirections) => {
-   let wolfNextPossibleCells = getPossibleMoveDirection(allPossibleDirections, WOLF_CELL);
-   calculateNearPath(wolfNextPossibleCells, characterIndex, WOLF_CELL);
-}
-
-const calculateNearPath = (wolfNextPossibleCells, characterIndex) => {
-    const getRabbitIndex = getCharacterCordinates(RABBIT_CELL);
-    const nearPathCells = {}
-    let resultOfTeorem;
-    const [rabbitX, rabbitY] = getRabbitIndex[0];
-
-    Object.keys(wolfNextPossibleCells).forEach(function(key) {
-        const [checkX, checkY] = wolfNextPossibleCells[key];
-        const side1 = Math.abs(rabbitX - checkX);
-        const side2 = Math.abs(rabbitY - checkY);
-        resultOfTeorem = Math.floor(Math.sqrt(Math.pow(side1, 2) + Math.pow(side2, 2)));
-        nearPathCells[resultOfTeorem] = [checkX,checkY];
-      });    
-    
-    const neaCellToRabbit =  nearPathCells[Object.keys(nearPathCells)[0]]
-    moveCurrentCharacter(characterIndex, neaCellToRabbit, WOLF_CELL);
-}
-
-function getRabbitPossibleMoves(cordinate,direction){
-    let [x,y] = cordinate;
-    (x < direction.y) && (x = direction.x);
-    (y < direction.y) && (y = direction.x);
-    (x > direction.x) && (x = direction.y);
-    (y > direction.x) && (y = direction.y);
-    return [x, y];
-}
-const moveRabbit = (character, code) => {
-    let allPossibleDirections  = getAllPossibleDirections(character);
-    const characterCordinates = getCharacterCordinates(character);
-    let possibleMoves = getPossibleMoveDirection(allPossibleDirections[0], character);
+    let possibleMoves = getPossibleMoveDirection(allPossibleDirections[0],RABBIT_CELL);
 
     Object.keys(possibleMoves).forEach(function(key) {
         if(key == code){
             getGameResultStatus(possibleMoves[key]);
-            moveCurrentCharacter(characterCordinates[0], possibleMoves[key], character);
+            moveCurrentCharacter(characterCordinate[0], possibleMoves[key], RABBIT_CELL);
         }
     }); 
+}
+
+const moveWolf = () => {
+    const allPossibleDirections  = getAllPossibleDirections(WOLF_CELL);
+    const characterCordinate = getCharacterCordinate(WOLF_CELL);
+    for(let i = 0; i < gameSettings.WOLFCOUNT; i++){
+        attackRabbit(characterCordinate[i], allPossibleDirections[i], WOLF_CELL);
+    }
+}
+
+const attackRabbit = (characterIndex, allPossibleDirections) => {
+   const wolfNextPossibleCells = getPossibleMoveDirection(allPossibleDirections, WOLF_CELL);
+   const nearCellToRabbit = getRabbitNearPath(wolfNextPossibleCells, characterIndex, WOLF_CELL);
+   moveCurrentCharacter(characterIndex, nearCellToRabbit, WOLF_CELL);
+}
+
+const getRabbitNearPath = (wolfNextPossibleCells) => {
+    const getRabbitIndex = getCharacterCordinate(RABBIT_CELL);
+    const [rabbitX, rabbitY] = getRabbitIndex[0];
+    let nearPath = [];
+
+    const allPossibleCoordinates = Object.keys(wolfNextPossibleCells).map((keyCode) => {
+        return wolfNextPossibleCells[keyCode];
+    })
+    allPossibleCoordinates.reduce((minimumCellPathResult, coordinate) => {
+        const [checkXcell, checkYcell] = coordinate;
+        const side1 = Math.abs(rabbitX - checkXcell);
+        const side2 = Math.abs(rabbitY - checkYcell);
+        const resultOfTeorem = Math.floor(Math.sqrt(Math.pow(side1, 2) + Math.pow(side2, 2)));
+        if(minimumCellPathResult === null || resultOfTeorem < minimumCellPathResult){
+            minimumCellPathResult = resultOfTeorem;
+            nearPath = coordinate;
+        }
+        return minimumCellPathResult;
+
+    }, minimumCellPathResult = null)
+    return nearPath;
 }
 
 function getGameResultStatus(checkMoveCell){
@@ -188,15 +169,15 @@ const Rabbit = matrix[x][y];
 
     if(Rabbit === WOLF_CELL || Rabbit){
         const gameStatus = "It was very tasty,Game Over ...";
-        statusUi(gameStatus);
+        setStatusGame(gameStatus);
     }
     if(Rabbit == HOUSE_CELL){
         const gameStatus = "Rabbit at home,won";
-        statusUi(gameStatus);
+        setStatusGame(gameStatus);
     }
 }
 
-function statusUi(status){
+function setStatusGame(status){
     matrix = [];
     board.innerHTML = "";
     statusText.innerHTML = status;
@@ -205,28 +186,43 @@ function statusUi(status){
 
 const moveCurrentCharacter = (currentIndex, move, character) => {
     const [currentX, currentY] = currentIndex;
-    // rename
     const [nextMoveX, nextMoveY] =  move;
     matrix[currentX][currentY] = FREE_CELL;
     getGameResultStatus(move);
     matrix[nextMoveX][nextMoveY] = character;
-    let rabbit = document.getElementById(`${currentX}${currentY}`).firstChild;
+    const rabbit = document.getElementById(`${currentX}${currentY}`).firstChild;
     document.getElementById(`${nextMoveX}${nextMoveY}`).appendChild(rabbit);
     document.getElementById(`${currentX}${currentY}`).removeChild; 
-    }
+}
+
+function getWolfPossibleMoves(cordinate){
+    const possibleCoord =  cordinate.map(cell => {
+        cell < 0 && (cell = 0)
+        cell > matrix.length-1 && (cell = matrix.length-1 )
+        return cell;
+    })
+    return possibleCoord;
+}
+
+
+function getRabbitPossibleMoves(cordinate){
+    const possibleCoord = cordinate.map(cell => {
+        cell < 0 && (cell = matrix.length- 1)
+        cell > matrix.length-1 && (cell = 0)
+        return cell;
+    })
+    return possibleCoord;
+}
 
 const getPossibleMoveDirection = (allPossibleDirections, character) => {  
-    const direction = {
-        x:matrix.length - 1,
-        y:0,
-    }
     const allowedMoves = characters[character].allowedMoves;
-
     return Object.keys(allPossibleDirections).reduce((characterPossibleMoves, key) => {
-        const rabbitMoves = getRabbitPossibleMoves(allPossibleDirections[key],direction);
-        const wolfMoves = getWolfPossibleMoves(allPossibleDirections[key],direction);
-        let checkedCell = (character === RABBIT_CELL) ? rabbitMoves: wolfMoves;
-        const [newX, newY] = checkedCell;
+
+        const rabbitMoves = getRabbitPossibleMoves(allPossibleDirections[key]);
+        const wolfMoves = getWolfPossibleMoves(allPossibleDirections[key]);
+        const checkedCoord = (character === RABBIT_CELL) ? rabbitMoves: wolfMoves;
+
+        const [newX, newY] = checkedCoord;        
         if(allowedMoves.includes(matrix[newX][newY])){
             characterPossibleMoves[key] = [newX, newY];
         }
@@ -234,7 +230,7 @@ const getPossibleMoveDirection = (allPossibleDirections, character) => {
     }, {})
 }
 
-const getCharacterCordinates = (character) => {
+const getCharacterCordinate = (character) => {
     return matrix.reduce((acc, array, rowIndex) => {
         array.forEach((element, columnIndex) => {
             if(element === character){
@@ -246,7 +242,7 @@ const getCharacterCordinates = (character) => {
 }
 
 const getAllPossibleDirections = (character) => {
-    const getAllMovesArray = getCharacterCordinates(character).map((cordinates)=>{
+    const getCharacterAllMovesArray = getCharacterCordinate(character).map((cordinates)=>{
         const [x,y] = cordinates;
         return ({
             37: [newX,newY] = [x, y - 1],
@@ -255,7 +251,5 @@ const getAllPossibleDirections = (character) => {
             40: [newX,newY] = [x + 1, y], 
         })
     });
-    return getAllMovesArray;
+    return getCharacterAllMovesArray;
 }
-
-console.log("Hello");
